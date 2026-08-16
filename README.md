@@ -45,7 +45,7 @@ Interactive roadmaps (Web Dev, Frontend, Backend, Full Stack, Python, JavaScript
 ### 🐛 BugLab
 A set of broken code snippets across syntax, logic, loops, functions, arrays, and async bugs, with difficulty tiers (Beginner → Nightmare), hints, and local score/streak tracking.
 
-### 🤖 CoDeX AI Coder (optional, BYOK)
+### 🤖 CoDeX AI Coder (optional, BYOK - Bring Your Own Key)
 Connect your own **OpenRouter** API key to unlock:
 - A chat interface for describing a project idea
 - A structured plan (name, description, stack, features, file structure) before any code is generated
