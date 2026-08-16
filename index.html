@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Craftbench — Build. Debug. Learn. Analyze. Ship.</title>
+<meta name="description" content="Craftbench is a browser-based developer workspace: an offline developer toolbox, build-prep lab, and project analyzer, with an optional AI coder powered by your own OpenRouter key.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23C89B54%22/><text x=%2250%22 y=%2268%22 font-size=%2258%22 font-family=%22Georgia,serif%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22%231B1A18%22>C</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<script>
+  // Self-diagnosing fallback: ES module scripts silently fail to run under
+  // file:// (browsers block cross-origin module loading for local files),
+  // which otherwise looks like a totally blank app with no error message.
+  // This is a plain classic script, so it always runs even when app.js can't.
+  (function () {
+    function showDiag(message) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#1B1A18;color:#EDE6D9;' +
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px;';
+      banner.innerHTML =
+        '<div style="max-width:520px;background:#242220;border:1px solid #3A362F;border-radius:14px;padding:28px 30px;">' +
+        '<div style="font-size:12px;letter-spacing:0.08em;color:#C89B54;margin-bottom:10px;">CRAFTBENCH — COULD NOT START</div>' +
+        '<div style="font-size:15px;line-height:1.6;margin-bottom:16px;">' + message + '</div>' +
+        '<div style="background:#1B1A18;border:1px solid #3A362F;border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12.5px;color:#A79E8E;">' +
+        'cd craftbench<br>python3 -m http.server 8080<br># then open http://localhost:8080</div>' +
+        '</div>';
+      document.body.appendChild(banner);
+    }
+    if (location.protocol === 'file:') {
+      showDiag('This page was opened directly from disk (<code>file://</code>), which browsers block from loading the app\'s modules. Serve this folder with a local server, or deploy it (e.g. GitHub Pages), then open it over http/https.');
+    } else {
+      window.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () {
+          if (!document.querySelector('.peg-item')) {
+            showDiag('The app did not finish loading. Open your browser\'s developer console (F12) for the exact error — this is usually a network issue loading one of the script files, or an ad blocker/extension blocking scripts.');
+          }
+        }, 3500);
+      });
+    }
+  })();
+</script>
+
+<div class="app">
+  <!-- ===== Pegboard sidebar ===== -->
+  <nav class="railnav" id="railnav">
+    <div class="brand">
+      <div class="brand-mark">CB</div>
+      <div class="brand-text">
+        <div class="brand-name">Craftbench</div>
+        <div class="brand-tag">Dev Workspace</div>
+      </div>
+    </div>
+    <div class="rail-scroll" id="rail-scroll"></div>
+    <div class="rail-footer">
+      Created by <strong style="color:var(--text);">Abhinaya Tripathee</strong><br>
+      <span class="mono" style="color:var(--brass);">CoDeX</span> ·
+      <a href="https://github.com/abhinaya-codex" target="_blank" rel="noopener">View GitHub ↗</a>
+    </div>
+  </nav>
+  <div class="nav-scrim"></div>
+
+  <!-- ===== Main column ===== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn menu-btn" id="menu-btn" aria-label="Open menu">☰</button>
+        <span class="crumb" id="crumb-label"><strong>Dashboard</strong></span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm" id="cmdk-btn" aria-label="Open command palette">⌘ Search <span class="kbd">Ctrl K</span></button>
+        <button class="icon-btn" id="terminal-btn" title="Open terminal (press C)" aria-label="Open terminal">›_</button>
+        <button class="icon-btn" id="help-btn" title="What can I do here?" aria-label="Show welcome guide">?</button>
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">◐</button>
+      </div>
+    </header>
+
+    <main class="view" id="view-outer">
+      <div class="view-header">
+        <div class="view-eyebrow" id="view-eyebrow">HOME</div>
+      </div>
+      <div id="view"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== Command palette ===== -->
+<div class="cmdk-overlay" id="cmdk-overlay" style="display:none;">
+  <div class="cmdk-box" role="dialog" aria-label="Command palette">
+    <input type="text" id="cmdk-input" class="cmdk-input" placeholder="Search tools, generators, settings…" aria-label="Search Craftbench">
+    <div class="cmdk-list" id="cmdk-list"></div>
+  </div>
+</div>
+
+<!-- ===== Terminal ===== -->
+<div class="terminal-overlay" id="terminal-overlay" style="display:none;">
+  <div class="terminal-box" role="dialog" aria-label="Craftbench terminal">
+    <div class="terminal-head">
+      <span class="terminal-dot" style="background:#C1584A;"></span>
+      <span class="terminal-dot" style="background:#D9A441;"></span>
+      <span class="terminal-dot" style="background:#6FA96A;"></span>
+      <span style="margin-left:8px;">craftbench — not a real OS shell</span>
+      <button class="icon-btn" id="terminal-close" style="margin-left:auto; width:24px; height:24px;" aria-label="Close terminal">✕</button>
+    </div>
+    <div class="terminal-body" id="terminal-body"></div>
+    <div class="terminal-input-row">
+      <span class="prompt mono">craftbench&gt;</span>
+      <input type="text" id="terminal-input" placeholder="type a command…" aria-label="Terminal input">
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
